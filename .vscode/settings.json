@@ -5,7 +5,12 @@
         "chrono": "cpp",
         "random": "cpp",
         "limits": "cpp",
-        "ranges": "cpp"
+        "ranges": "cpp",
+        "bit": "cpp",
+        "*.tcc": "cpp",
+        "list": "cpp",
+        "functional": "cpp",
+        "condition_variable": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
