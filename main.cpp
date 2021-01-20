@@ -6,7 +6,7 @@
 #define HEIGHT 1000
 
 
-int point_in_circle() {
+bool is_generated_point_in_circle() {
   int pointX = rand() % WIDTH;
   int pointY = rand() % HEIGHT;
 
@@ -24,7 +24,7 @@ int main(const int argc, const char **argv) {
   long double pi = 0;
 
   for (;;) {
-    int is_inside = point_in_circle();
+    int is_inside = is_generated_point_in_circle();
     
     total_points++;
     if (is_inside == 1) {
