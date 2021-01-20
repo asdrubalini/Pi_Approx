@@ -6,11 +6,17 @@
 #define HEIGHT 1000
 
 
-bool is_generated_point_in_circle() {
-    int pointX = rand() % WIDTH;
-    int pointY = rand() % HEIGHT;
+struct point {
+    int x;
+    int y;
+};
 
-    long double distance_from_center = sqrt(pow(pointX - WIDTH / 2, 2) + pow(pointY - HEIGHT / 2, 2));
+bool is_generated_point_in_circle() {
+    point p;
+    p.x = rand() % WIDTH;
+    p.y = rand() % HEIGHT;
+
+    long double distance_from_center = sqrt(pow(p.x - WIDTH / 2, 2) + pow(p.y - HEIGHT / 2, 2));
 
     return distance_from_center <= 500;
 }
