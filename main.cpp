@@ -34,7 +34,7 @@ int main(const int argc, const char **argv) {
         
         total_points++;
         if (is_inside == 1) {
-        circle_points++;
+            circle_points++;
         }
 
         pi = (long double) circle_points / total_points * 4;
