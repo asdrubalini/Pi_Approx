@@ -13,7 +13,8 @@
 
 #define WIDTH 1000
 #define HEIGHT 1000
-#define PROCESS_COUNT 16
+#define PROCESS_COUNT 32 // Number of processes to be spawned
+#define PRINT_DELAY_SECONDS 1
 
 struct point {
     int x;
@@ -21,6 +22,11 @@ struct point {
 };
 
 bool is_generated_point_in_circle() {
+    /**
+     * Generate a random point in the space and
+     * return whether said point is inside the circle
+    */
+
     point p;
     p.x = rand() % WIDTH;
     p.y = rand() % HEIGHT;
@@ -31,6 +37,13 @@ bool is_generated_point_in_circle() {
 }
 
 void child_compute(long long int *result) {
+    /**
+     * Executed in each child process, *result
+     * points to a shared memory space when must be put
+     * the total points count and total points in circle
+     * count. This data will be then red by the parent
+     * process.
+    */
     srand(time(NULL));
 
     long long int *total_points = result + 0;
@@ -49,7 +62,10 @@ void child_compute(long long int *result) {
 }
 
 int main() {
-
+    /**
+     * Allocate a shared memory location that will be written
+     * to by forked processes and red by the parent.
+    */
     long long int *results = static_cast<long long int*>(mmap(
         NULL, sizeof (long long int) * PROCESS_COUNT * 2,
         PROT_READ | PROT_WRITE,
@@ -57,7 +73,10 @@ int main() {
         -1, 0
     ));
 
-
+    /**
+     *  Spawn childrens based on PROCESS_COUNT, each child will
+     * call child_compute with a pointer to its shared memory location
+     */
     for (size_t i = 0; i < PROCESS_COUNT; i++) {
         pid_t pid = fork();
 
@@ -72,8 +91,10 @@ int main() {
         }
     }
 
-    // Parent
-
+    /**
+     * Parent code, read all memory written by each child and compute
+     * the new value of pi every PRINT_DELAY_SECONDS
+    */
     for (;;) {
         long long int total_points = 0;
         long long int circle_points = 0;
@@ -84,11 +105,14 @@ int main() {
         }
 
         long double pi = (long double) circle_points / total_points * 4;
-        // printf("%Lf\n", pi);
-        std::cout << "Pi: " << pi << std::endl;
-        sleep(1);
+        printf("%Lf\n", pi);
+        sleep(PRINT_DELAY_SECONDS);
     }
 
+    /**
+     * Unreachable code, should unmap the shared memory location,
+     * usually cleaned up on SIGINT by the Linux kernel
+    */
     munmap(results, sizeof (long long int) * PROCESS_COUNT * 2);
 
     return 0;
