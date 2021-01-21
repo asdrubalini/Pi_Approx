@@ -2,6 +2,7 @@
 #include <math.h>
 #include <time.h>
 #include <iostream>
+#include <chrono>
 
 // fork
 #include <sys/types.h>
@@ -62,6 +63,8 @@ void child_compute(long long int *result) {
 }
 
 int main() {
+    auto start = std::chrono::high_resolution_clock::now();
+
     /**
      * Allocate a shared memory location that will be written
      * to by forked processes and red by the parent.
@@ -91,6 +94,8 @@ int main() {
         }
     }
 
+    long double pi = 0;
+
     /**
      * Parent code, read all memory written by each child and compute
      * the new value of pi every PRINT_DELAY_SECONDS
@@ -104,10 +109,20 @@ int main() {
             circle_points += *(results + (i * sizeof (long long int) * 2 + 1));
         }
 
-        long double pi = (long double) circle_points / total_points * 4;
-        printf("%Lf\n", pi);
-        sleep(PRINT_DELAY_SECONDS);
+        if (total_points >= INT64_MAX * 0.5) {
+            break;
+        }
+
+        pi = (long double) circle_points / total_points * 4;
+        // std::cout << pi << std::endl;
+        // sleep(PRINT_DELAY_SECONDS);
     }
+
+    std::cout << pi << std::endl;
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
+    printf("Code took %d microseconds with %d processes\n", duration, PROCESS_COUNT);
 
     /**
      * Unreachable code, should unmap the shared memory location,
