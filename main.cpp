@@ -3,6 +3,7 @@
 #include <time.h>
 #include <iostream>
 #include <chrono>
+#include <vector>
 
 // fork
 #include <sys/types.h>
@@ -11,10 +12,10 @@
 #include <sys/mman.h>
 #include <sys/wait.h>
 
+#include <sys/sysinfo.h>
 
 #define WIDTH 1000
 #define HEIGHT 1000
-#define PROCESS_COUNT 32 // Number of processes to be spawned
 #define PRINT_DELAY_SECONDS 1
 
 struct point {
@@ -22,7 +23,7 @@ struct point {
     int y;
 };
 
-bool is_generated_point_in_circle() {
+static bool is_generated_point_in_circle() {
     /**
      * Generate a random point in the space and
      * return whether said point is inside the circle
@@ -63,7 +64,9 @@ void child_compute(long long int *result) {
 }
 
 int main() {
-    auto start = std::chrono::high_resolution_clock::now();
+    const int PROCESS_COUNT = get_nprocs();
+
+    std::cout << "Running with " << PROCESS_COUNT << " threads" << std::endl;
 
     /**
      * Allocate a shared memory location that will be written
@@ -76,12 +79,16 @@ int main() {
         -1, 0
     ));
 
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<pid_t> child_pids = { };
+
     /**
-     *  Spawn childrens based on PROCESS_COUNT, each child will
+     * Spawn childrens based on PROCESS_COUNT, each child will
      * call child_compute with a pointer to its shared memory location
      */
     for (size_t i = 0; i < PROCESS_COUNT; i++) {
         pid_t pid = fork();
+        child_pids.push_back(pid);
 
         if (pid == -1) {
             printf("fork() error, unable to fork current process\n");
@@ -109,26 +116,27 @@ int main() {
             circle_points += *(results + (i * sizeof (long long int) * 2 + 1));
         }
 
-        if (total_points >= INT64_MAX * 0.5) {
+        if (total_points >= 1e9) {
             break;
         }
 
         pi = (long double) circle_points / total_points * 4;
-        // std::cout << pi << std::endl;
+        // std::cout << total_points << std::endl;
         // sleep(PRINT_DELAY_SECONDS);
+        sleep(0.01);
     }
 
-    std::cout << pi << std::endl;
+    std::cout << "Pi: " << pi << std::endl;
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
-    printf("Code took %d microseconds with %d processes\n", duration, PROCESS_COUNT);
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+    printf("Code took %d milliseconds with %d processes\n", duration, PROCESS_COUNT);
 
-    /**
-     * Unreachable code, should unmap the shared memory location,
-     * usually cleaned up on SIGINT by the Linux kernel
-    */
     munmap(results, sizeof (long long int) * PROCESS_COUNT * 2);
+
+    for (pid_t pid : child_pids) {
+        kill(pid, SIGKILL);
+    }
 
     return 0;
 }
