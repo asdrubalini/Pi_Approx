@@ -30,3 +30,6 @@ jobs:
           cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
           useVcpkgToolchainFile: false
           buildDirectory: build
+
+      - name: Test binary
+        run: build/Pi_Approx

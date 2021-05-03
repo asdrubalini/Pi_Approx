@@ -116,7 +116,7 @@ int main() {
             circle_points += *(results + (i * sizeof (long long int) * 2 + 1));
         }
 
-        if (total_points >= 1e9) {
+        if (total_points >= 1e8) {
             break;
         }
 
